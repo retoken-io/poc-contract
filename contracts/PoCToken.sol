@@ -10,7 +10,7 @@ contract PoCToken is StandardToken, Ownable {
     string public constant name = "PoCToken";
     string public constant symbol = "PoC_REM";
     uint8 public constant decimals = 6;
-    
+
     /**
         Price of property in Wei
      */
@@ -19,9 +19,17 @@ contract PoCToken is StandardToken, Ownable {
         Amount of Wei per token
      */
     uint256 public tokenRate;
+    /**
+        Amount of tokens left for sale
+     */
     uint256 public remainingTokens;
 
     address[] public balanceOwners;
+    /**
+        List of legal records, which correspond to formal activities related to the contract
+     */
+    string[] public legalRecords;
+
     /**
         Address of a broker who sells the property
      */
@@ -42,10 +50,10 @@ contract PoCToken is StandardToken, Ownable {
     /**
     Purchase tokens based on transaction amount
      */
-    function purchaseTokens() public {
+    function purchaseTokens() payable public {
         uint256 tokenAmount = msg.value.div(tokenRate);
-        require(tokenAmount < remainingTokens);
-        remainingTokens.sub(tokenAmount);
+        require(tokenAmount <= remainingTokens);
+        remainingTokens = remainingTokens.sub(tokenAmount);
         addBalanceOwner(msg.sender);
         balances[msg.sender] = balances[msg.sender].add(tokenAmount);
         
@@ -64,7 +72,8 @@ contract PoCToken is StandardToken, Ownable {
         brokerAddress.transfer(this.balance);
     }
 
-    function finalizeDeal(string text) onlyOwner public {
+    function addLegalRecord(string text) onlyOwner public {
+        legalRecords.push(text);
         SaleEvent(text, 0);
     }
 
@@ -80,8 +89,7 @@ contract PoCToken is StandardToken, Ownable {
     function addBalanceOwner(address _balanceOwner) internal {
         //adding recipient to the array of owners
         if (balances[_balanceOwner] == 0) {
-            balanceOwners.length = balanceOwners.length + 1;
-            balanceOwners[balanceOwners.length - 1] = _balanceOwner;
+            balanceOwners.push(_balanceOwner);
         }
     }
 
