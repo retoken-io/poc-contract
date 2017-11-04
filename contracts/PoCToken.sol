@@ -14,17 +14,24 @@ contract PoCToken is StandardToken, Ownable {
     /**
         Price of property in Wei
      */
-    uint256 public totalValueWei;
+    uint256 public totalValueWei = 15200000000000000000;
+    
     /**
         Amount of Wei per token
      */
-    uint256 public tokenRate;
+    uint256 public tokenRate = 1000000000000000;
+    
     /**
-        Amount of tokens left for sale
+     *   Amount of tokens left for sale
      */
     uint256 public remainingTokens;
 
+    /**
+     * Array of addresses which have or had positive balance. 
+     * This is used for iteration through all token owners
+     */
     address[] public balanceOwners;
+
     /**
         List of legal records, which correspond to formal activities related to the contract
      */
@@ -33,24 +40,31 @@ contract PoCToken is StandardToken, Ownable {
     /**
         Address of a broker who sells the property
      */
-    address public brokerAddress;
+    address public brokerAddress = 0x588331DFAAF70FC5dc035568838dF7990dC42C25;
+        
+    bool public allowOperations = true;
 
-    function PoCToken(uint256 _totalValueWei, uint256 _tokenRate, address _brokerAddress) {
-        require(_totalValueWei > 0);
-        require(_tokenRate > 0);
-        tokenRate = _tokenRate;
-        totalValueWei = _totalValueWei;
-        totalSupply = _totalValueWei.div(_tokenRate);
+    // function PoCToken(uint256 _totalValueWei, uint256 _tokenRate, address _brokerAddress) {
+    //     require(_totalValueWei > 0);
+    //     require(_tokenRate > 0);
+    //     tokenRate = _tokenRate;
+    //     totalValueWei = _totalValueWei;
+    //     totalSupply = _totalValueWei.div(_tokenRate);
 
+    //     //initially all supply is available for sale
+    //     remainingTokens = totalSupply;
+    //     brokerAddress = _brokerAddress;
+    // }
+    function PoCToken() public {
+        totalSupply = totalValueWei.div(tokenRate);
         //initially all supply is available for sale
         remainingTokens = totalSupply;
-        brokerAddress = _brokerAddress;
     }
 
     /**
     Purchase tokens based on transaction amount
      */
-    function purchaseTokens() payable public {
+    function purchaseTokens() payable contractActive public {
         uint256 tokenAmount = msg.value.div(tokenRate);
         require(tokenAmount <= remainingTokens);
         remainingTokens = remainingTokens.sub(tokenAmount);
@@ -64,11 +78,11 @@ contract PoCToken is StandardToken, Ownable {
     // }
 
     /**
-    Close sale when no more tokens left
+        Transfer funds to broker account
      */
-    function closeSale() onlyOwner payable public {
+    function transferToBroker() onlyOwner payable public {
         require(brokerAddress != 0);
-        SaleEvent("Sale complete. Total amount raised: ", this.balance);
+        SaleEvent("Funds transferred to broker's account. Total amount raised: ", this.balance);
         brokerAddress.transfer(this.balance);
     }
 
@@ -96,7 +110,7 @@ contract PoCToken is StandardToken, Ownable {
     /** 
         ERC20 Override to keep track of balance owners
      */
-    function transfer(address _to, uint256 _value) public returns (bool) {
+    function transfer(address _to, uint256 _value) contractActive public returns (bool) {
         addBalanceOwner(_to);
         return super.transfer(_to, _value);
     }
@@ -104,9 +118,27 @@ contract PoCToken is StandardToken, Ownable {
     /** 
         ERC20 Override to keep track of balance owners
      */
-    function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
+    function transferFrom(address _from, address _to, uint256 _value) contractActive public returns (bool) {
         addBalanceOwner(_to);
         return super.transferFrom(_from, _to, _value);
+    }
+
+    function stopOperations() onlyOwner public {
+        addLegalRecord("Contract operations stopped");
+        allowOperations = false;
+    }
+
+    function allowOperations() onlyOwner public {
+        addLegalRecord("Contract operations resumed");
+        allowOperations = true;
+    }
+
+    /**
+    *   Modified that checks for operation allowance
+    */
+    modifier contractActive() {
+        require(allowOperations);
+        _;
     }
 
 
