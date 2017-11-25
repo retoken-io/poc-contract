@@ -7,8 +7,9 @@ import "./PoCToken.sol";
 * @dev Contract for PoCToken related income distribution  
 */
 contract PoCIncomeManager is Ownable {
-    address public pocToken;
-    address public incomeProvider;
+    address public pocToken = 0xCEC49Cdf893A92b7D2e15DF77fEA44367b06e095;
+    address public incomeProvider = 0x970312CE025B8F17EFDdD05fF4A2fA5d1F1c4703;
+    string public description = "";
     /**
     * event for logging of balance changes
     * @param sender who sent request for balance change
@@ -178,6 +179,13 @@ contract PoCIncomeManager is Ownable {
     */
     function setIncomeProvider(address _incomeProvider) onlyOwner public {
         incomeProvider = _incomeProvider;
+    }
+
+    /**
+    * Set description of a contract. This will include object type which generates income
+    */
+    function setDescription(string _description) onlyOwner public {
+        description = _description;        
     }
     /**
     * Allows call only by income provider

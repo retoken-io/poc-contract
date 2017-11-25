@@ -217,4 +217,21 @@ contract('PoCIncomeManager', function(accounts) {
       assert.equal(owner, contractOwnerAddress);
     });
 
+    it("should set description", async() => {
+        let newDescription = "test description";
+        await manager.setDescription(newDescription, {from: contractOwnerAddress});
+        let description = await manager.description({from: incomeProviderAddress});
+        assert.equal(description, newDescription);
+          
+    });
+
+    it('should reject description change when requested not by owner', async()=>{
+        try{
+            await manager.setDescription("test", {from: incomeProviderAddress});            
+            assert.fail("should not change description");
+        }catch(error) {
+            assertJump(error);
+        } 
+    });
+
 });  
