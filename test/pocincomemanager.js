@@ -213,7 +213,7 @@ contract('PoCIncomeManager', function(accounts) {
 
 
     it("should have an owner", async() => {
-      let owner = await manager.owner();
+      let owner = await manager.owner.call();
       assert.equal(owner, contractOwnerAddress);
     });
 
